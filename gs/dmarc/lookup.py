@@ -24,11 +24,11 @@ class ReceiverPolicy(Enum):
     '''An enumeration of the different receiver policies in DMARC.'''
     __order__ = 'noDmarc none quarantine reject'  # only needed in 2.x
 
-    #: No published DMARC receiver-policy could be found. Often interpreted
+    #: No published DMARC receiver-policy could be found.  Often interpreted
     #: the same way as :attr:`gs.dmarc.ReceiverPolicy.none`.
     noDmarc = 0
 
-    #: The published policy is ``none``. Recieving parties are supposed to
+    #: The published policy is ``none``.  Recieving parties are supposed to
     #: skip the verification of the DMARC signature.
     none = 1
 
@@ -70,7 +70,7 @@ def lookup_receiver_policy(host):
         # Check that v= field is the first one in the answer (which is in
         # double quotes) as per Section 7.1 (5):
         #     In particular, the "v=DMARC1" tag is mandatory and MUST appear
-        #     first in the list. Discard any that do not pass this test.
+        #     first in the list.  Discard any that do not pass this test.
         # http://tools.ietf.org/html/draft-kucherawy-dmarc-base-04#section-7.1
         if answer[:9] == '"v=DMARC1':
             tags = answer_to_dict(answer)
@@ -104,8 +104,9 @@ used to perform the query.
     if retval == ReceiverPolicy.noDmarc:
         # TODO: automatically update the suffix list data file
         # <https://publicsuffix.org/list/effective_tld_names.dat>
+        # You can run update_suffix_list_file() method to update file
         fn = get_suffix_list_file_name()
-        with open(fn, 'r') as suffixList:
+        with open(fn, 'r', -1, "utf-8") as suffixList:
             psl = PublicSuffixList(suffixList)
             newHost = psl.get_public_suffix(hostSansDmarc)
         # TODO: Look up the subdomain policy
@@ -123,3 +124,14 @@ def get_suffix_list_file_name():
     modulePath = gs.dmarc.__path__[0]
     retval = path_join(modulePath, 'suffixlist.txt')
     return retval
+
+def update_suffix_list_file():
+    result = False
+    import urllib
+    file_resp = urllib.request.urlopen("https://publicsuffix.org/list/effective_tld_names.dat")
+    data = file_resp.read()
+    file_name = get_suffix_list_file_name()
+    file = open(file_name, 'wb').write(data)
+    if file > 0:
+        result = True
+    return result
